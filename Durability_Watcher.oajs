@@ -1,3 +1,6 @@
+// This is a simple script, just run it. You can config the delay between the refresh.
+// Any suggestion or bug to Android#7813
+
 function Durability_Watcher() {
 	// Set the delay between checks
     var delay = 10; 
