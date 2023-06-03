@@ -11,9 +11,14 @@ This GitHub repository contains my collection of custom scripts for OrionUO, a p
 
 
 ## Current scripts list
-
-* Treasure Map Location Runner
+* [Treasure Map Location Runner](https://github.com/ArdXxX/OrionUO/blob/main/RunTotMap.oajs)
 
 https://github.com/ArdXxX/OrionUO/assets/45080754/460af2f5-910d-453e-99da-a2872bbe5450
 
+
+
+
+* [Durability Watcher](https://github.com/ArdXxX/OrionUO/blob/main/Durability_Watcher.oajs)
+
+https://github.com/ArdXxX/OrionUO/assets/45080754/4a4ee4c4-6098-4d35-93a0-1c2405912003
 
