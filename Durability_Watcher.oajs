@@ -1,0 +1,57 @@
+function Durability_Watcher() {
+	// Set the delay between checks
+    var delay = 10; 
+	
+    while (true) {
+        if (!Player.Dead()) { // Check if the player is not dead
+            var d = 60; // Initial vertical position of the text
+            var y = 90; // Initial height of the gump
+			
+			// Check the items which contain durability to display 
+            for (var i = 1; i < 24; i++) {  
+                if (Orion.ObjAtLayer(i)) {  
+                    var itemd = Orion.ObjAtLayer(i);  
+                    var properties = itemd.Properties();  
+                    if (Orion.Contains(itemd.Properties(), 'Durability')) {
+                        y += 15;  
+                        Orion.Wait(10);  
+                    }
+                    Orion.Wait(10);  
+                }
+            }
+			
+			//Create the gump 
+            var gump = Orion.CreateCustomGump(69);  
+            gump.Clear();  
+            gump.AddResizepic(0, 0, '302', 320, y);  
+            gump.AddResizepic(0, 0, '302', 320, 50);  
+            gump.AddText(90, 15, '0x0025', 'DURABILITY WATCHER');  
+			
+			// Check the items durability and list 
+            for (var i = 1; i < 24; i++) { 
+                var item = Orion.ObjAtLayer(i);
+                if (item && Orion.Contains(item.Properties(), 'Durability')) {
+                    var properties = item.Properties();
+                    var matches = /Durability (\d+)\s\/\s(\d+)/.exec(properties);
+                    if (matches && matches.length > 2) {
+                        var durability = Number(matches[1]);
+                        var maxDurability = Number(matches[2]);
+                        var textColor = '0x0095';
+						
+						// Recolor text if the item is at less than 50% yellow or less than 10% red.
+                        if (durability / maxDurability * 100 < 10) {
+                            textColor = '0x0025'; 
+                        } else if (durability / maxDurability * 100 < 50) {
+                            textColor = '0x0035'; 
+                        }
+                        gump.AddText(25, d, textColor, item.Name()); 
+                        gump.AddText(240, d, textColor, matches[1] + "/" + matches[2]); 
+                        d += 15; 
+                    }
+                }
+            }
+            gump.Update(); 
+        }
+        Orion.Wait(delay * 1000);
+    }
+}
