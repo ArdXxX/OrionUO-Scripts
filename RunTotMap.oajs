@@ -1,3 +1,7 @@
+// You should be at least in same map for run to the treasure location, sometimes it will not get the route and you will need to move a bit near. 
+// Example: if the treasure is near trinsic territory, don't try run it at yew... get moongate to trinsic and run it.
+// Any suggestion or bug to Android#7813
+
 function GetMapCoords() {
     Orion.WaitForAddObject('tmap');
 
