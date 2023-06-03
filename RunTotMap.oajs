@@ -1,0 +1,38 @@
+function GetMapCoords() {
+    Orion.WaitForAddObject('tmap');
+
+    var tmap = Orion.FindObject('tmap');
+
+    if (!tmap) {
+        Orion.Print("Treasure map not found!");
+        return -1;
+    }
+
+    var xRegex = /X:(\d+)/;
+    var yRegex = /Y:(\d+)/;
+
+    var xMatch = tmap.Properties().match(xRegex);
+    var yMatch = tmap.Properties().match(yRegex);
+
+    var x = xMatch ? xMatch[1] : null;
+    var y = yMatch ? yMatch[1] : null;
+
+    if (!x || !y) {
+        Orion.Print("Can't get the tmap coords!");
+        return -1;
+    }
+
+    // Print coords and show quest arrow, seems a bit buggy and sometimes is not the real location, anyway we will run to the right position.
+    Orion.Print("Map Coords: " + x + "," + y);
+    Orion.SetTrack(true, x, y);
+
+    // Run to the treasure location
+    Orion.WalkTo(x, y, 0, 1);
+    Orion.Wait(1000);
+ 
+    // Dig the treasure
+    Orion.RequestContextMenu('tmap');
+    Orion.WaitContextMenuID('tmap', 1);
+    if (Orion.WaitForTarget(1000))
+        Orion.TargetTile('any', x, y, 0);
+}
