@@ -1,42 +1,59 @@
-// You should be at least in same map for run to the treasure location, sometimes it will not get the route and you will need to move a bit near. 
-// Example: if the treasure is near trinsic territory, don't try run it at yew... get moongate to trinsic and run it.
+// You should be at least in the same map to run to the treasure location. Sometimes it will not get the route, and you will need to move a bit nearer. 
+// Example: if the treasure is near Trinsic territory, don't try to run it at Yew. Get a moongate to Trinsic and run it from there.
 // Any suggestion or bug to Android#7813
 
-function GetMapCoords() {
-    Orion.WaitForAddObject('tmap');
+// Official shard? true or false 
+var OSI = true;
 
+// Function to get map coordinates from the treasure map
+function GetMapCoords() {
+    Orion.OAOptionSet('Tracker', 1);
+    Orion.SetTrack(false);
+
+    // Wait for the player to add the treasure map object
+    Orion.WaitForAddObject('tmap');
     var tmap = Orion.FindObject('tmap');
 
     if (!tmap) {
-        Orion.Print("Treasure map not found!");
+        Orion.Print('Treasure map not found!');
         return -1;
     }
 
-    var xRegex = /X:(\d+)/;
-    var yRegex = /Y:(\d+)/;
+    var x, y;
+    if (!OSI) {
+        // Extract coordinates from the map properties for unofficial shards
+        var xRegex = /X:(\d+)/;
+        var yRegex = /Y:(\d+)/;
 
-    var xMatch = tmap.Properties().match(xRegex);
-    var yMatch = tmap.Properties().match(yRegex);
+        var xMatch = tmap.Properties().match(xRegex);
+        var yMatch = tmap.Properties().match(yRegex);
 
-    var x = xMatch ? xMatch[1] : null;
-    var y = yMatch ? yMatch[1] : null;
-
-    if (!x || !y) {
-        Orion.Print("Can't get the tmap coords!");
-        return -1;
+        x = xMatch ? parseInt(xMatch[1], 10) : null;
+        y = yMatch ? parseInt(yMatch[1], 10) : null;
+    } else {
+        // Use the map and get coordinates from the quest arrow for official shards
+        Orion.UseObject(tmap);
+        Orion.Wait(1000);
+        var tmapPos = Orion.QuestArrowPosition();
+        x = tmapPos.X();
+        y = tmapPos.Y();
     }
-
-    // Print coords and show quest arrow, seems a bit buggy and sometimes is not the real location, anyway we will run to the right position.
-    Orion.Print("Map Coords: " + x + "," + y);
+    if (x === null || y === null) {
+            Orion.Print("Can't get the treasure map coordinates!");
+            return -1;
+    }
+    // Print coordinates and set the tracking
+    Orion.Print("Map Coordinates: " + x + "," + y);
     Orion.SetTrack(true, x, y);
 
     // Run to the treasure location
     Orion.WalkTo(x, y, 0, 1);
     Orion.Wait(1000);
- 
+
     // Dig the treasure
     Orion.RequestContextMenu('tmap');
     Orion.WaitContextMenuID('tmap', 1);
-    if (Orion.WaitForTarget(1000))
+    if (Orion.WaitForTarget(1000)) {
         Orion.TargetTile('any', x, y, 0);
+    }
 }
