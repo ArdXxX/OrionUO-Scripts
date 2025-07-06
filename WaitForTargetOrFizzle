@@ -1,0 +1,21 @@
+// This script wait for target or fizzle journal.
+// Usage: WaitForTargetOrFizzle(5000); // This example wait for target or fizzle, if no any show, it finish in 5 seconds.
+// Any suggestion or bug to Android#7813
+
+function WaitForTargetOrFizzle(timeout) {
+    var startTime = Orion.Now();
+    var expireTime = startTime + timeout;
+    var fizzle = 'The spell fizzles|Your concentration is disturbed';
+    
+    while (Orion.Now() < expireTime) {
+        if (Orion.HaveTarget()) {
+            return true; 
+        }
+        if (Orion.InJournal(fizzle, 'my|sys')) {
+            Orion.ClearJournal(fizzle, 'my|sys');
+            return false; 
+        }
+        Orion.Wait(50);  
+    }
+    return null;  
+}
