@@ -1,1 +1,184 @@
+// Pet Intensity Calculator 
+// Calculate the intensity of a pet and share the result. < 50% intensity marks red, 50% to 80% yellow and > 80% green.
+// Version     1.0
+// Author 		Android#7813
+// https://github.com/ArdXxX/OrionUO-Scripts/
 
+function PetIC() {
+  var name      = Shared.GetVar('PetIC_name');
+  var oldSlots  = Shared.GetVar('PetIC_oldSlots');
+  var newSlots  = Shared.GetVar('PetIC_newSlots');
+  var pctRating = Shared.GetVar('PetIC_pctRating');
+  var pctValue  = Shared.GetVar('PetIC_pctValue');
+  var undefined = Shared.GetVar('PetIC_undefined');
+
+  var g = Orion.CreateCustomGump(30001);
+  g.Clear();
+  g.SetCallback('PetIC_');
+  g.AddResizepic(0,0,'0x9C40',200,155);
+  g.AddText(15,10,'0x0481','Pet Intensity Calculator');
+  // Eval button
+  g.AddButtonTileArt(1,16,35,
+    '0x2076','0x2076','0x2076','',
+    '0x2076','',0,0
+  );
+  g.AddText(75,42,'0x0481','Evaluate Pet');
+  // Help
+  g.AddButton(2,175,10,'22153','22154','22155','');
+  g.AddTooltip('Help → GitHub: ArdXxX & Discord: Android#7813');
+
+  if (undefined) {
+    g.AddText(15,75,'0x0025','Undefined pet: ' + undefined);
+    g.AddText(15,95,'0x0025','Report to Android#7813');
+  }
+  else if (name) {
+    g.AddText(15,75,'0x0481','Name: ' + name);
+    g.AddText(15,95,'0x0481','Pet Slots: ' + oldSlots + ' → ' + newSlots);
+    var hue = pctValue < 50 ? '0x0025'
+            : pctValue < 80 ? '0x0030'
+            : '0x0048';
+    g.AddText(15,115,hue,'Intensity Rating: ' + pctRating);
+  }
+
+  g.Update();
+}
+
+function PetIC_(_) {
+  var code = CustomGumpResponse.ReturnCode();
+  Orion.CloseGump('custom','any',0x1DB);
+
+  if (code === 1) {
+    Shared.ClearVars();
+    PetIC();
+    var res = EvaluatePet();
+    if (res.undefined) {
+      Shared.AddVar('PetIC_undefined', res.undefined);
+    } else {
+      Shared.AddVar('PetIC_name', res.name);
+      Shared.AddVar('PetIC_oldSlots', res.oldSlots);
+      Shared.AddVar('PetIC_newSlots', res.newSlots);
+      Shared.AddVar('PetIC_pctRating', res.pctRating);
+      Shared.AddVar('PetIC_pctValue', res.pctValue);
+    }
+    PetIC();
+  }
+  else if (code === 2) {
+    Orion.Print('GitHub: github.com/ArdXxX/OrionUO-Scripts');
+    Orion.Print('Discord: Android#7813');
+    PetIC();
+  }
+  else if (code === 0) {
+    Shared.ClearVars();
+  }
+}
+
+function EvaluatePet(_) {
+  Orion.CloseGump('generic','any',0x1DB);
+  if (!Orion.WaitForAddObject('targetCreature',10000)) {
+    Orion.Print('PetIC: No target selected.');
+    return {};
+  }
+  
+  var pet = Orion.FindObject('targetCreature');
+  if (!pet) {
+    Orion.Print('PetIC: Invalid target.');
+    return {};
+  }
+
+  Orion.UseSkill('Animal Lore');
+  Orion.WaitForTarget(1000);
+  Orion.TargetObject(pet.Serial());
+  
+  if (!Orion.WaitForGump(3000,true)) {
+    Orion.Print('PetIC: Animal Lore gump not found.');
+    return {};
+  }
+  
+  var g = Orion.GetLastGump();
+  var lines = g.TextList().map(function(t){
+    return t.replace(/<[^>]*>/g,'').trim();
+  }).filter(function(l){ return l; });
+
+  function num(s){ var m=s.match(/(\d+)/);return m?+m[1]:0; }
+  function pct(s){ var m=s.match(/(\d+)%/);return m?+m[1]:0; }
+
+  var stats =	[1,2,3,4,5,6].map(function(i){return num(lines[i]);});
+  var resists = [11,12,13,14,15].map(function(i){return pct(lines[i]);});
+  var wStats = [3,0.5,0.5,3,0.1,0.5];
+  var wResists = [3,3,3,3,3];
+
+  var total = 0;
+  for (var i=0;i<stats.length;i++){
+    total += Math.floor(stats[i]*wStats[i]);
+  }
+  for (var j=0;j<resists.length;j++){
+    total += Math.floor(resists[j]*wResists[j]);
+  }
+
+  var bdLine = lines[21]||'';
+  var mBD = bdLine.match(/(\d+)-(\d+)/);
+  var baseDamage = 0;
+  
+  if (mBD) {
+    baseDamage = (parseInt(mBD[1],10)+parseInt(mBD[2],10))/2;
+  }
+
+  // pet config: ranges, baseDamage, innate magical, innate ability
+  var configs = {
+    'nightmare':			{min:3951, max:4254, dmg:75, magical:1500, ability:100},
+    'drake':					{min:2820, max:3144, dmg:60, magical:0, ability:100},
+    'dragon':				{min:6599, max:6936, dmg:75, magical:1500, ability:100},
+    'giant beetle':			{min:1680, max:1830, dmg:70, magical:0, ability:0},
+    'fire beetle':			{min:1890, max:1905, dmg:70, magical:0, ability:0},
+    'fire steed':			{min:2870, max:3170, dmg:80, magical:0, ability:100},
+    'clydesdale':			{min:2102, max:2818, dmg:70, magical:0, ability:0},
+    'cu sidhe':				{min:4624, max:5261, dmg:95, magical:0, ability:200},
+    'greater dragon':	{min:6139, max:7149, dmg:110, magical:1500, ability:200},
+    'high plains boura': {min:3701, max:4255, dmg:80, magical:0, ability:100},
+    'gaman':				{min:1495, max:2001, dmg:40, magical:0, ability:0},
+    'hell hound':			{min:2581, max:3207, dmg:60, magical:1500, ability:100},
+    'hiryu':					{min:4340, max:5272, dmg:100, magical:0, ability:200},
+    'ki-rin':					{min:3774, max:4117, dmg:75, magical:1500, ability:0},
+    'unicorn':				{min:3834, max:4222, dmg:75, magical:1500, ability:0},
+    'lesser hiryu':			{min:2070, max:2705, dmg:80, magical:0, ability:200},
+    'rune beetle':			{min:5111, max:5760, dmg:75, magical:1600, ability:200},
+    'shadowmane':		{min:4248, max:4248, dmg:75, magical:1500, ability:0},
+    'white wyrm':			{min:5097, max:5760, dmg:85, magical:1500, ability:0}
+  };
+
+  var nmLower = pet.Name().toLowerCase();
+  var key     = undefined;
+  for (var k in configs) {
+    if (nmLower.indexOf(k)!==-1) {
+      key = k; break;
+    }
+  }
+  if (!key) {
+    Orion.Print('undefined pet: ' + pet.Name());
+    return {undefined: pet.Name()};
+  }
+
+  var cfg = configs[key];
+  total += cfg.dmg + cfg.magical + cfg.ability;
+
+  var pctValue = ((total - cfg.min)/(cfg.max - cfg.min))*100;
+  pctValue = Math.max(0,Math.min(100,pctValue));
+  var pctRating = pctValue.toFixed(2) + '%';
+
+  var slotLine = lines[43]||'';
+  var sm = slotLine.match(/(\d+)\s*=>\s*(\d+)/);
+  var oldS = sm?sm[1]:'?';
+  var newS = sm?sm[2]:'?';
+
+  Orion.Wait(1000);
+  Orion.CloseGump('generic','any',0x1DB);
+
+  return {
+    name:      pet.Name(),
+    oldSlots:  oldS,
+    newSlots:  newS,
+    pctRating: pctRating,
+    pctValue:  pctValue
+  };
+}
+ 
