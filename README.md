@@ -23,7 +23,8 @@ https://github.com/ArdXxX/OrionUO/assets/45080754/460af2f5-910d-453e-99da-a2872b
 https://github.com/ArdXxX/OrionUO/assets/45080754/4a4ee4c4-6098-4d35-93a0-1c2405912003
 
 
+* [Pet Intensity Calculator](https://github.com/ArdXxX/OrionUO-Scripts/blob/main/PetIC.oajs)
+
+https://github.com/user-attachments/assets/331cef18-0d52-4bae-90e8-3ef69bb4ca0f
 
 
-
-![](https://visitcount.itsvg.in/api?id=ArdXxXxXx&icon=0&color=0) 
