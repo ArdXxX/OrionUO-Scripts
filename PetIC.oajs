@@ -1,8 +1,7 @@
 // Pet Intensity Calculator
 // Calculates the intensity of a pet and shows the result. Colors: <50% red, 50–80% yellow, >80% green.
-// Version 1.1 (Fixed pretame Cu Sidhe)
-// Author: Android#7813   
-
+// Version 1.2 (Added Pretame toggle for cu sidhe)
+// Author: Android#7813
 
 var pet_configs = {
   'nightmare':            {min:3951, max:4254, dmg:75,  magical:1500, ability:100},
@@ -12,7 +11,7 @@ var pet_configs = {
   'fire beetle':          {min:1890, max:1905, dmg:70,  magical:0,    ability:0},
   'fire steed':           {min:2870, max:3170, dmg:80,  magical:0,    ability:100},
   'clydesdale':           {min:2102, max:2818, dmg:70,  magical:0,    ability:0},
-  'cu sidhe':             {min:4624, max:5261, dmg:95,  magical:0,    ability:200, reduce:true},   // <- only Cu Sidhe has stat reduction
+  'cu sidhe':             {min:4624, max:5261, dmg:95,  magical:0,    ability:200, reduce:true},
   'greater dragon':       {min:6139, max:7149, dmg:110, magical:1500, ability:200},
   'high plains boura':    {min:3701, max:4255, dmg:80,  magical:0,    ability:100},
   'gaman':                {min:1495, max:2001, dmg:40,  magical:0,    ability:0},
@@ -26,7 +25,6 @@ var pet_configs = {
   'white wyrm':           {min:5097, max:5760, dmg:85,  magical:1500, ability:0}
 };
 
- 
 function PetIC() {
   var name      = Shared.GetVar('PetIC_name');
   var oldSlots  = Shared.GetVar('PetIC_oldSlots');
@@ -56,18 +54,26 @@ function PetIC() {
     g.AddText(15,95,'0x0481','Pet Slots: ' + oldSlots + ' → ' + newSlots);
     var hue = (pctValue < 50) ? '0x0025' : (pctValue < 80) ? '0x0030' : '0x0048';
     g.AddText(15,115,hue,'Intensity Rating: ' + pctRating);
+
+    if (name.toLowerCase().indexOf('cu sidhe') !== -1) {
+      var pretame = Shared.GetVar('PetIC_pretame') || false;
+      var graphic = pretame ? '0x00D3' : '0x00D2';
+      g.AddButton(3, 15, 155, graphic, graphic, graphic, '');
+      g.AddText(45,157,'0x0481','Pretame');
+    }
   }
   g.Update();
 }
 
 function PetIC_(_) {
   var code = CustomGumpResponse.ReturnCode();
-  
   Orion.CloseGump('custom','any',0x1DB);
 
   if (code === 1) {
-    Shared.ClearVars();
-    PetIC();
+	var pretameState = Shared.GetVar('PetIC_pretame'); // Guardar estado
+	Shared.ClearVars();
+	if (pretameState !== undefined) Shared.AddVar('PetIC_pretame', pretameState);
+	PetIC();
 
     var res = EvaluatePet();
     if (res.undefined) {
@@ -76,14 +82,19 @@ function PetIC_(_) {
       Shared.AddVar('PetIC_name',      res.name);
       Shared.AddVar('PetIC_oldSlots',  res.oldSlots);
       Shared.AddVar('PetIC_newSlots',  res.newSlots);
-      Shared.AddVar('PetIC_pctRating', res.pctRating);
-      Shared.AddVar('PetIC_pctValue',  res.pctValue);
     }
     PetIC();
   }
   else if (code === 2) {
     Orion.Print('GitHub: github.com/ArdXxX/OrionUO-Scripts');
     Orion.Print('Discord: Android#7813');
+    PetIC();
+  }
+  else if (code === 3) {
+    var state = !Shared.GetVar('PetIC_pretame');
+    Shared.AddVar('PetIC_pretame', state);
+    Orion.Print('Pretame: ' + (state ? 'ON' : 'OFF'));
+    PetIC_Recalculate();
     PetIC();
   }
   else if (code === 0) {
@@ -120,10 +131,6 @@ function EvaluatePet(_) {
     if (t) lines.push(t);
   }
 
-  if (lines.length < 25) {
-    Orion.Print('PetIC: Lore gump layout unexpected (lines=' + lines.length + ').');
-  }
-
   var nmLower = pet.Name().toLowerCase();
   var key = null;
   for (var k in pet_configs) {
@@ -147,30 +154,58 @@ function EvaluatePet(_) {
     resists[ri] = _pct(_safeLine(lines, resists[ri]));
   }
 
-  if (cfg.reduce) {
-    stats[0] = Math.floor(stats[0] / 2);
-    stats[1] = Math.floor(stats[1] / 2);
-    stats[2] = Math.floor(stats[2] / 2);
-    stats[3] = Math.floor(stats[3] / 2);
+  // Guardar datos originales
+  Shared.AddVar('PetIC_statsBase', stats);
+  Shared.AddVar('PetIC_resistsBase', resists);
+  Shared.AddVar('PetIC_petKey', key);
+
+  // Guardar slots
+  var slotLine = _safeLine(lines, 43);
+  var sm = slotLine.match(/(\d+)\s*=>\s*(\d+)/);
+  var oldS = sm ? sm[1] : '?';
+  var newS = sm ? sm[2] : '?';
+  Shared.AddVar('PetIC_oldSlots', oldS);
+  Shared.AddVar('PetIC_newSlots', newS);
+
+  // Calcular intensidad inicial
+  PetIC_Recalculate();
+
+  Orion.Wait(500);
+  Orion.CloseGump('generic','any',0x1DB);
+
+  return {
+    name:      pet.Name(),
+    oldSlots:  oldS,
+    newSlots:  newS
+  };
+}
+
+function PetIC_Recalculate(_) {
+  var stats = Shared.GetVar('PetIC_statsBase');
+  var resists = Shared.GetVar('PetIC_resistsBase');
+  var key = Shared.GetVar('PetIC_petKey');
+  if (!stats || !resists || !key) return;
+
+  var cfg = pet_configs[key];
+
+  // Clonar arrays para no modificar originales
+  var s = stats.slice(0);
+  var r = resists.slice(0);
+
+  // Aplicar reducción si corresponde
+  if (cfg.reduce && Shared.GetVar('PetIC_pretame')) {
+    s[0] = Math.floor(s[0] / 2);
+    s[1] = Math.floor(s[1] / 2);
+    s[2] = Math.floor(s[2] / 2);
+    s[3] = Math.floor(s[3] / 2);
   }
 
   var wStats    = [3, 0.5, 0.5, 3, 0.1, 0.5];
   var wResists  = [3, 3, 3, 3, 3];
 
   var total = 0;
-  for (var i1 = 0; i1 < stats.length; i1++) {
-    total += Math.floor(stats[i1] * wStats[i1]);
-  }
-  for (var j1 = 0; j1 < resists.length; j1++) {
-    total += Math.floor(resists[j1] * wResists[j1]);
-  }
-
-  var bdLine = _safeLine(lines, 21);
-  var mBD = bdLine.match(/(\d+)-(\d+)/);
-  var baseDamage = 0;
-  if (mBD) {
-    baseDamage = (parseInt(mBD[1], 10) + parseInt(mBD[2], 10)) / 2;
-  }
+  for (var i = 0; i < s.length; i++) total += Math.floor(s[i] * wStats[i]);
+  for (var j = 0; j < r.length; j++) total += Math.floor(r[j] * wResists[j]);
 
   total += (cfg.dmg || 0) + (cfg.magical || 0) + (cfg.ability || 0);
 
@@ -180,21 +215,8 @@ function EvaluatePet(_) {
   if (pctValue > 100) pctValue = 100;
   var pctRating = pctValue.toFixed(2) + '%';
 
-  var slotLine = _safeLine(lines, 43);
-  var sm = slotLine.match(/(\d+)\s*=>\s*(\d+)/);
-  var oldS = sm ? sm[1] : '?';
-  var newS = sm ? sm[2] : '?';
-
-  Orion.Wait(500);
-  Orion.CloseGump('generic','any',0x1DB);
-
-  return {
-    name:      pet.Name(),
-    oldSlots:  oldS,
-    newSlots:  newS,
-    pctRating: pctRating,
-    pctValue:  pctValue
-  };
+  Shared.AddVar('PetIC_pctValue', pctValue);
+  Shared.AddVar('PetIC_pctRating', pctRating);
 }
 
 function _num(s) {
@@ -207,4 +229,6 @@ function _pct(s) {
   return m ? parseInt(m[1], 10) : 0;
 }
 
-function _safeLine(lines, idx) { return (idx >= 0 && idx < lines.length) ? lines[idx] : ''; }
+function _safeLine(lines, idx) {
+  return (idx >= 0 && idx < lines.length) ? lines[idx] : '';
+}
