@@ -9,6 +9,7 @@ This GitHub repository contains my collection of custom scripts for OrionUO, a p
 * Clear and concise documentation that explains the usage of each script, along with examples and installation guides to facilitate their implementation.
 * Explore this repository and take your Ultima Online experience to the next level with these custom scripts for OrionUO! If you have any questions, feel free to open an issue or submit a pull request.
 
+## You can request custom scripts at my discord: Android#7813
 
 ## Current scripts list
 * [Treasure Map Location Runner](https://github.com/ArdXxX/OrionUO/blob/main/RunTotMap.oajs)
