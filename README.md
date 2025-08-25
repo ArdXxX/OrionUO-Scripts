@@ -29,3 +29,9 @@ https://github.com/ArdXxX/OrionUO/assets/45080754/4a4ee4c4-6098-4d35-93a0-1c2405
 https://github.com/user-attachments/assets/331cef18-0d52-4bae-90e8-3ef69bb4ca0f
 
 
+
+* Private Scripts
+  Auto Clydesdale tamer, it kill regular and uncommon clydesdales until rare or higher spawn, then it take and save it at stable. For more info contact me at discord Android#7813
+  
+  <img width="417" height="264" alt="image" src="https://github.com/user-attachments/assets/04ccc213-cd58-4c80-9925-f2a10f19997e" />
+
