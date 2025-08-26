@@ -12,7 +12,7 @@ var pet_configs = {
   'fire steed':           {min:2870, max:3170, dmg:80,  magical:0,    ability:100},
   'clydesdale':           {min:2102, max:2818, dmg:70,  magical:0,    ability:0},
   'cu sidhe':             {min:4624, max:5261, dmg:95,  magical:0,    ability:200, reduce:true},
-  'greater dragon':       {min:6139, max:7149, dmg:110, magical:1500, ability:200},
+  'greater dragon':       {min:6139, max:7149, dmg:110, magical:1500, ability:200, reduce:true},
   'high plains boura':    {min:3701, max:4255, dmg:80,  magical:0,    ability:100},
   'gaman':                {min:1495, max:2001, dmg:40,  magical:0,    ability:0},
   'hell hound':           {min:2581, max:3207, dmg:60,  magical:1500, ability:100},
@@ -55,12 +55,13 @@ function PetIC() {
     var hue = (pctValue < 50) ? '0x0025' : (pctValue < 80) ? '0x0030' : '0x0048';
     g.AddText(15,115,hue,'Intensity Rating: ' + pctRating);
 
-    if (name.toLowerCase().indexOf('cu sidhe') !== -1) {
-      var pretame = Shared.GetVar('PetIC_pretame') || false;
-      var graphic = pretame ? '0x00D3' : '0x00D2';
-      g.AddButton(3, 15, 155, graphic, graphic, graphic, '');
-      g.AddText(45,157,'0x0481','Pretame');
-    }
+	var petKey = Shared.GetVar('PetIC_petKey');
+	if (petKey && pet_configs[petKey] && pet_configs[petKey].reduce) {
+	    var pretame = Shared.GetVar('PetIC_pretame') || false;
+	    var graphic = pretame ? '0x00D3' : '0x00D2';
+	    g.AddButton(3, 15, 155, graphic, graphic, graphic, '');
+	    g.AddText(45,157,'0x0481','Pretame');
+	}
   }
   g.Update();
 }
