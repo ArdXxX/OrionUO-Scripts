@@ -1,6 +1,6 @@
 // Pet Intensity Calculator
 // Calculates the intensity of a pet and shows the result. Colors: <50% red, 50–80% yellow, >80% green.
-// Version 1.2 (Added Pretame toggle for cu sidhe)
+// Version 1.3 (Added New Legacy Pets)
 // Author: Android#7813
 
 var pet_configs = {
@@ -22,7 +22,21 @@ var pet_configs = {
   'lesser hiryu':         {min:2070, max:2705, dmg:80,  magical:0,    ability:200},
   'rune beetle':          {min:5111, max:5760, dmg:75,  magical:1600, ability:200},
   'shadowmane':           {min:4248, max:4248, dmg:75,  magical:1500, ability:0},
-  'white wyrm':           {min:5097, max:5760, dmg:85,  magical:1500, ability:0}
+  'white wyrm':           {min:5097, max:5760, dmg:85,  magical:1500, ability:0},
+  'Triton':         		  {min:3556, max:4556, dmg:80,  magical:0, ability:100},
+  //New Legacy Pets 
+  'Juvenile Manticore':             {min:4356, max:4943, dmg:90,  magical:0,    ability:0},
+  'Emberwing':             {min:7133, max:7118, dmg:100,  magical:1500,    ability:200},
+  'Arantress':             {min:5158, max:5143, dmg:75,  magical:1600,    ability:0},
+  'Arctos':             {min:4358, max:4343, dmg:75,  magical:0,    ability:200},
+  'Blazetail':             {min:4172, max:4157, dmg:80,  magical:0,    ability:200},
+  'Cinderclaw':             {min:4433, max:4418, dmg:75,  magical:0,    ability:200},
+  'Draalwyrm':             {min:4827, max:5653, dmg:80,  magical:0,    ability:100},
+  'Frostpaw':             {min:3323, max:3332, dmg:65,  magical:0,    ability:200},
+  'Ossidrial':             {min:7028, max:7028, dmg:85,  magical:1600,    ability:200},
+  'Pachuxo':             {min:4208, max:4193, dmg:75,  magical:0,    ability:200},
+  'Snarltooth':             {min:4373, max:4358, dmg:75,  magical:0,    ability:200},
+  'Thunderhoof':             {min:3682, max:3667, dmg:65,  magical:0,    ability:100},
 };
 
 function PetIC() {
