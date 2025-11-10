@@ -2,11 +2,9 @@
 // Example: if the treasure is near Trinsic territory, don't try to run it at Yew. Get a moongate to Trinsic and run it from there.
 // Any suggestion or bug to Android#7813
 
-// Official shard? true or false 
-var OSI = true;
 
-// Function to get map coordinates from the treasure map
-function GetMapCoords() {
+// Function to get map coordinates from the treasure/nest map
+function GoToMapLocation() {
     Orion.OAOptionSet('Tracker', 1);
     Orion.SetTrack(false);
 
@@ -19,25 +17,13 @@ function GetMapCoords() {
         return -1;
     }
 
-    var x, y;
-    if (!OSI) {
-        // Extract coordinates from the map properties for unofficial shards
-        var xRegex = /X:(\d+)/;
-        var yRegex = /Y:(\d+)/;
+    // Use the map and get coordinates from the quest arrow for official shards
+    Orion.UseObject(tmap);
+    Orion.Wait(1000);
+    var tmapPos = Orion.QuestArrowPosition();
+    x = tmapPos.X();
+    y = tmapPos.Y();
 
-        var xMatch = tmap.Properties().match(xRegex);
-        var yMatch = tmap.Properties().match(yRegex);
-
-        x = xMatch ? parseInt(xMatch[1], 10) : null;
-        y = yMatch ? parseInt(yMatch[1], 10) : null;
-    } else {
-        // Use the map and get coordinates from the quest arrow for official shards
-        Orion.UseObject(tmap);
-        Orion.Wait(1000);
-        var tmapPos = Orion.QuestArrowPosition();
-        x = tmapPos.X();
-        y = tmapPos.Y();
-    }
     if (x === null || y === null) {
             Orion.Print("Can't get the treasure map coordinates!");
             return -1;
@@ -52,8 +38,9 @@ function GetMapCoords() {
 
     // Dig the treasure
     Orion.RequestContextMenu('tmap');
-    Orion.WaitContextMenuID('tmap', 1);
+    Orion.WaitContextMenuID('tmap', 305);
     if (Orion.WaitForTarget(1000)) {
         Orion.TargetTile('any', x, y, 0);
     }
 }
+
