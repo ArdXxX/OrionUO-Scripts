@@ -9,7 +9,7 @@ This GitHub repository contains my collection of custom scripts for OrionUO, a p
 * Clear and concise documentation that explains the usage of each script, along with examples and installation guides to facilitate their implementation.
 * Explore this repository and take your Ultima Online experience to the next level with these custom scripts for OrionUO! If you have any questions, feel free to open an issue or submit a pull request.
 
-## You can request custom scripts at my discord: Android#7813
+## You can request custom scripts at my discord: Android7813
 
 ## Current scripts list
 * [Treasure Map Location Runner](https://github.com/ArdXxX/OrionUO/blob/main/RunTotMap.oajs)
@@ -31,7 +31,11 @@ https://github.com/user-attachments/assets/331cef18-0d52-4bae-90e8-3ef69bb4ca0f
 
 
 * Private Scripts
-  Auto Clydesdale tamer, it kill regular and uncommon clydesdales until rare or higher spawn, then it take and save it at stable. For more info contact me at discord Android#7813
+  Auto Clydesdale tamer, it kill regular and uncommon clydesdales until rare or higher spawn, then it take and save it at stable. For more info contact me at discord Android7813
+  Draconic Awakning Event Farming, it will farm event drops 100% automatically, getting current dungeon, going, killined, ressing, turn in points, repair and much more. 100% AFK Farming.
   
   <img width="417" height="264" alt="image" src="https://github.com/user-attachments/assets/04ccc213-cd58-4c80-9925-f2a10f19997e" />
+
+  <img width="340" height="566" alt="image" src="https://github.com/user-attachments/assets/19f9cc35-08a8-40cf-b889-17da97712fd9" />
+
 
