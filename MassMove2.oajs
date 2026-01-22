@@ -1,0 +1,199 @@
+// Updated version of the MassMove function.
+// Moves only items with the same type, color, and properties.
+// Includes a progress bar gump with a stop button to cancel safely.
+// Version: 1.0
+// Author: android7813
+
+
+function MassMove2() {
+    Orion.CancelTarget();
+
+    Orion.CharPrint(self, "0x0481", "*Target item to move*");
+    if (Orion.WaitForAddObject("itemType", 20000) === 0) {
+        Orion.CancelTarget();
+        Orion.CharPrint(self, "0x0025", "*Timeout*");
+        return false;
+    }
+
+    var baseItem = Orion.FindObject("itemType");
+    if (!baseItem) {
+        Orion.CharPrint(self, "0x0025", "*Aborted*");
+        return false;
+    }
+
+    var sourceContainer = baseItem.Container();
+    if (!sourceContainer) {
+        Orion.CharPrint(self, "0x0025", "*Item must be inside a container*");
+        return false;
+    }
+
+    var graphic = baseItem.Graphic();
+    var color = baseItem.Color();
+    var properties = baseItem.Properties();
+
+    Orion.CharPrint(self, "0x0481", "*Target destination*");
+    if (Orion.WaitForAddObject("destContainer", 20000) === 0) {
+        Orion.CancelTarget();
+        Orion.CharPrint(self, "0x0025", "*Timeout*");
+        return false;
+    }
+
+    var destObj = Orion.FindObject("destContainer");
+    if (!destObj) {
+        Orion.CharPrint(self, "0x0025", "*Invalid destination*");
+        return false;
+    }
+
+    var destContainer = destObj.Serial();
+
+    var scan = Orion.FindTypeEx(graphic, color, sourceContainer);
+    if (!scan || !scan.length) {
+        Orion.CharPrint(self, "0x0025", "*No matching items found*");
+        return false;
+    }
+
+    var total = 0;
+    for (var c = 0; c < scan.length; c++) {
+        if (scan[c] && scan[c].Container() === sourceContainer && scan[c].Properties() === properties)
+            total++;
+    }
+    if (total <= 0) {
+        Orion.CharPrint(self, "0x0025", "*No matching items found*");
+        return false;
+    }
+
+    var gump = Orion.CreateCustomGump(0xBEEF1234);
+    if (!gump) {
+        Orion.CharPrint(self, "0x0025", "*Failed to create gump*");
+        return false;
+    }
+
+    // Position: centered in game window, slightly above character (screen center)
+    var gw = parseInt(Orion.ClientOptionGet("GameWindowWidth"), 10);
+    var gh = parseInt(Orion.ClientOptionGet("GameWindowHeight"), 10);
+    if (!gw || gw <= 0) gw = 800;
+    if (!gh || gh <= 0) gh = 600;
+
+    var W = 330, H = 85;
+    var GX = Math.floor((gw - W) / 2);
+    var GY = Math.floor(gh / 2) - H - 100; // “por encima” del centro (personaje)
+    if (GX < 0) GX = 0;
+    if (GY < 0) GY = 0;
+
+    var PAD = 10;
+    var BAR_X = PAD + 10, BAR_Y = 46, BAR_W = W - (PAD + 18) * 2, BAR_H = 14;
+
+    function drawProgress(moved, totalCount, itemName) {
+        var pct = 0;
+        if (totalCount > 0) pct = Math.floor((moved * 100) / totalCount);
+        if (pct < 0) pct = 0;
+        if (pct > 100) pct = 100;
+
+        var fillW = 0;
+        if (totalCount > 0) fillW = Math.floor((moved * BAR_W) / totalCount);
+        if (fillW < 0) fillW = 0;
+        if (fillW > BAR_W) fillW = BAR_W;
+
+        if (!itemName) itemName = "";
+
+        gump.Clear();
+        gump.SetX(GX);
+        gump.SetY(GY);
+
+        // compact panel
+        gump.AddCheckerTrans(0, 0, W, H);
+        gump.AddColoredPolygone(PAD, PAD, W - PAD * 2, H - PAD * 2, "#CC0F141B", 0, 1, 1);
+        gump.AddColoredPolygone(PAD, PAD, W - PAD * 2, 26, "#CC192433", 0, 1, 1);
+        gump.AddColoredPolygone(PAD, PAD, W - PAD * 2, H - PAD * 2, "#FF6B7785", 1, 2, 1);
+
+        gump.AddText(PAD + 14, PAD + 7, "0x0481", "Mass Move: " + itemName);
+
+        // Bar bg
+        gump.AddColoredPolygone(BAR_X, BAR_Y, BAR_W, BAR_H, "#AA070A0F", 0, 1, 1);
+        
+        //stop button
+        gump.AddButton(1, BAR_X + 280, BAR_Y - 2, '0x5686', '0x5687', '0x5688', '0');
+        
+        gump.SetCloseOnButtonClick(true);
+        
+        // Fill
+        if (fillW > 0)
+            gump.AddColoredPolygone(BAR_X, BAR_Y, fillW, BAR_H, "#CC27C7A8", 0, 1, 1);
+        // Highlight
+        gump.AddColoredPolygone(BAR_X + 1, BAR_Y + 1, BAR_W - 2, 2, "#33FFFFFF", 0, 1, 1);
+        // Frame
+        gump.AddColoredPolygone(BAR_X, BAR_Y, BAR_W, BAR_H, "#FF6B7785", 1, 1, 1);
+
+        // Text centered 
+        var barText = moved + "/" + totalCount + "  " + pct + "%";
+        var tx = BAR_X + Math.floor(BAR_W / 2) - 35; // approximate center
+        if (tx < BAR_X + 4) tx = BAR_X + 4;
+        gump.AddText(tx, BAR_Y - 1, "0x0481", barText);
+        
+        gump.SetCallback('callback_massmove');
+
+        gump.Update();
+    }
+    
+ 
+
+    var moved = 0;
+    var safety = 0;
+
+    drawProgress(0, total, baseItem.Name());
+
+    while (moved < total) {
+        var items = Orion.FindTypeEx(graphic, color, sourceContainer);
+        if (!items || !items.length)
+            break;
+
+        var movedThisPass = 0;
+
+        for (var i = 0; i < items.length; i++) {
+            var item = items[i];
+            if (!item)
+                continue;
+
+            if (item.Container() !== sourceContainer)
+                continue;
+
+            if (item.Properties() !== properties)
+                continue;
+
+            var itemName = item.Name();
+            drawProgress(moved, total, itemName);
+
+            Orion.MoveItem(item.Serial(), 0, destContainer);
+            moved++;
+            movedThisPass++;
+            Orion.Wait(1000);
+
+            drawProgress(moved, total, itemName);
+            break; // re-scan after moving 1
+        }
+
+        if (movedThisPass === 0)
+            break;
+
+        safety++;
+        if (safety >= 5000)
+            break;
+
+        Orion.Wait(50);
+    }
+
+    drawProgress(moved, total, "");
+    Orion.Wait(250);
+    gump.Close();
+
+    Orion.CharPrint(self, "0x0481", "*Moved: " + moved + " items*");
+    return true;
+}
+
+function callback_massmove(_){
+	var buttonID = CustomGumpResponse.ReturnCode();
+	if (buttonID === 1) {
+		Orion.CharPrint(self, "0x0025", "*Aborted*");
+		Orion.Terminate('MassMove2');
+	}
+}
